@@ -423,21 +423,19 @@ public class OsmModule implements GraphBuilderModule {
         options.boardingAreaRefTags()
       );
       if (skipVisibility) {
-        for (AreaGroup group : areaGroups) {
-          walkableAreaBuilder.buildWithoutVisibility(group);
-        }
+        areaGroups.parallelStream().forEach(walkableAreaBuilder::buildWithoutVisibility);
       } else {
         ProgressTracker progress = ProgressTracker.track(
           "Build visibility graph for areas",
           50,
           areaGroups.size()
         );
-        for (AreaGroup group : areaGroups) {
+        areaGroups.parallelStream().forEach(group ->{
           walkableAreaBuilder.buildWithVisibility(group);
           //Keep lambda! A method-ref would log incorrect class and line number
           //noinspection Convert2MethodRef
           progress.step(m -> LOG.info(m));
-        }
+        });
         LOG.info(progress.completeMessage());
       }
 

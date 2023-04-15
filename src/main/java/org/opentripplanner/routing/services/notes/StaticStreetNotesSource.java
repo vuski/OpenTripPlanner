@@ -1,6 +1,7 @@
 package org.opentripplanner.routing.services.notes;
 
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
 import java.io.Serializable;
 import java.util.HashMap;
@@ -28,7 +29,7 @@ public class StaticStreetNotesSource implements StreetNotesSource, Serializable 
    * Notes for street edges. No need to synchronize access to the map as they will not be concurrent
    * write access (no notes for temporary edges, we use notes from parent).
    */
-  private final SetMultimap<Edge, StreetNoteAndMatcher> notesForEdge = HashMultimap.<Edge, StreetNoteAndMatcher>create();
+  private final SetMultimap<Edge, StreetNoteAndMatcher> notesForEdge = Multimaps.synchronizedSetMultimap(HashMultimap.create());
 
   /**
    * Set of unique matchers, kept during building phase, used for interning (lots of note/matchers
@@ -49,7 +50,7 @@ public class StaticStreetNotesSource implements StreetNotesSource, Serializable 
     if (edge instanceof TemporaryPartialStreetEdge) {
       edge = ((TemporaryPartialStreetEdge) edge).getParentEdge();
     }
-    Set<StreetNoteAndMatcher> maas = notesForEdge.get(edge);
+    Set<StreetNoteAndMatcher> maas = Set.copyOf(notesForEdge.get(edge));
     if (maas == null || maas.isEmpty()) {
       return null;
     }

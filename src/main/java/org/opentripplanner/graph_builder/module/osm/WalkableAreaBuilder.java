@@ -3,11 +3,11 @@ package org.opentripplanner.graph_builder.module.osm;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.locationtech.jts.geom.Coordinate;
@@ -76,12 +76,12 @@ public class WalkableAreaBuilder {
 
   private final OsmDatabase osmdb;
 
-  private final Map<OSMWithTags, WayProperties> wayPropertiesCache = new HashMap<>();
+  private final Map<OSMWithTags, WayProperties> wayPropertiesCache = new ConcurrentHashMap<>();
 
   // This is an awful hack, but this class (WalkableAreaBuilder) ought to be rewritten.
   private final Handler handler;
 
-  private final HashMap<Coordinate, IntersectionVertex> areaBoundaryVertexForCoordinate = new HashMap<>();
+  private final Map<Coordinate, IntersectionVertex> areaBoundaryVertexForCoordinate = new ConcurrentHashMap<>();
 
   private final boolean platformEntriesLinking;
 

@@ -29,7 +29,9 @@ public class StaticStreetNotesSource implements StreetNotesSource, Serializable 
    * Notes for street edges. No need to synchronize access to the map as they will not be concurrent
    * write access (no notes for temporary edges, we use notes from parent).
    */
-  private final SetMultimap<Edge, StreetNoteAndMatcher> notesForEdge = Multimaps.synchronizedSetMultimap(HashMultimap.create());
+  private final SetMultimap<Edge, StreetNoteAndMatcher> notesForEdge = Multimaps.synchronizedSetMultimap(
+    HashMultimap.create()
+  );
 
   /**
    * Set of unique matchers, kept during building phase, used for interning (lots of note/matchers

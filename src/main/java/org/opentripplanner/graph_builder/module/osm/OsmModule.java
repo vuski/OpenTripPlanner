@@ -430,12 +430,14 @@ public class OsmModule implements GraphBuilderModule {
           50,
           areaGroups.size()
         );
-        areaGroups.parallelStream().forEach(group ->{
-          walkableAreaBuilder.buildWithVisibility(group);
-          //Keep lambda! A method-ref would log incorrect class and line number
-          //noinspection Convert2MethodRef
-          progress.step(m -> LOG.info(m));
-        });
+        areaGroups
+          .parallelStream()
+          .forEach(group -> {
+            walkableAreaBuilder.buildWithVisibility(group);
+            //Keep lambda! A method-ref would log incorrect class and line number
+            //noinspection Convert2MethodRef
+            progress.step(m -> LOG.info(m));
+          });
         LOG.info(progress.completeMessage());
       }
 
@@ -452,155 +454,158 @@ public class OsmModule implements GraphBuilderModule {
       ProgressTracker progress = ProgressTracker.track("Build street graph", 5_000, wayCount);
       LOG.info(progress.startMessage());
 
-      osmdb.getWays().parallelStream().forEach(way -> {
-        WayProperties wayData = way.getOsmProvider().getWayPropertySet().getDataForWay(way);
-        setWayName(way);
+      osmdb
+        .getWays()
+        .parallelStream()
+        .forEach(way -> {
+          WayProperties wayData = way.getOsmProvider().getWayPropertySet().getDataForWay(way);
+          setWayName(way);
         StreetTraversalPermission permissions = OsmFilter.getPermissionsForWay(
-          way,
-          wayData.getPermission(),
+            way,
+            wayData.getPermission(),
           options.banDiscouragedWalking(),
           options.banDiscouragedBiking(),
-          issueStore
-        );
+            issueStore
+          );
         if (!OsmFilter.isWayRoutable(way) || permissions.allowsNothing()) return;
 
-        // handle duplicate nodes in OSM ways
-        // this is a workaround for crappy OSM data quality
-        ArrayList<Long> nodes = new ArrayList<>(way.getNodeRefs().size());
-        long last = -1;
-        double lastLat = -1, lastLon = -1;
-        String lastLevel = null;
-        for (TLongIterator iter = way.getNodeRefs().iterator(); iter.hasNext();) {
-          long nodeId = iter.next();
-          OSMNode node = osmdb.getNode(nodeId);
-          if (node == null) return;
-          boolean levelsDiffer = false;
-          String level = node.getTag("level");
-          if (lastLevel == null) {
-            if (level != null) {
-              levelsDiffer = true;
+          // handle duplicate nodes in OSM ways
+          // this is a workaround for crappy OSM data quality
+          ArrayList<Long> nodes = new ArrayList<>(way.getNodeRefs().size());
+          long last = -1;
+          double lastLat = -1, lastLon = -1;
+          String lastLevel = null;
+          for (TLongIterator iter = way.getNodeRefs().iterator(); iter.hasNext();) {
+            long nodeId = iter.next();
+            OSMNode node = osmdb.getNode(nodeId);
+            if (node == null) return;
+            boolean levelsDiffer = false;
+            String level = node.getTag("level");
+            if (lastLevel == null) {
+              if (level != null) {
+                levelsDiffer = true;
+              }
+            } else {
+              if (!lastLevel.equals(level)) {
+                levelsDiffer = true;
+              }
             }
-          } else {
-            if (!lastLevel.equals(level)) {
-              levelsDiffer = true;
-            }
-          }
-          if (
-            nodeId != last && (node.lat != lastLat || node.lon != lastLon || levelsDiffer)
-          ) nodes.add(nodeId);
-          last = nodeId;
-          lastLon = node.lon;
-          lastLat = node.lat;
-          lastLevel = level;
-        }
-
-        IntersectionVertex startEndpoint = null;
-        IntersectionVertex endEndpoint = null;
-
-        ArrayList<Coordinate> segmentCoordinates = new ArrayList<>();
-
-        /*
-         * Traverse through all the nodes of this edge. For nodes which are not shared with any other edge, do not create endpoints -- just
-         * accumulate them for geometry and ele tags. For nodes which are shared, create endpoints and StreetVertex instances. One exception:
-         * if the next vertex also appears earlier in the way, we need to split the way, because otherwise we have a way that loops from a
-         * vertex to itself, which could cause issues with splitting.
-         */
-        Long startNode = null;
-        // where the current edge should start
-        OSMNode osmStartNode = null;
-
-        for (int i = 0; i < nodes.size() - 1; i++) {
-          OSMNode segmentStartOSMNode = osmdb.getNode(nodes.get(i));
-
-          if (segmentStartOSMNode == null) {
-            continue;
+            if (
+              nodeId != last && (node.lat != lastLat || node.lon != lastLon || levelsDiffer)
+            ) nodes.add(nodeId);
+            last = nodeId;
+            lastLon = node.lon;
+            lastLat = node.lat;
+            lastLevel = level;
           }
 
-          Long endNode = nodes.get(i + 1);
+          IntersectionVertex startEndpoint = null;
+          IntersectionVertex endEndpoint = null;
 
-          if (osmStartNode == null) {
-            startNode = nodes.get(i);
-            osmStartNode = segmentStartOSMNode;
-          }
-          // where the current edge might end
-          OSMNode osmEndNode = osmdb.getNode(endNode);
-
-          LineString geometry;
+          ArrayList<Coordinate> segmentCoordinates = new ArrayList<>();
 
           /*
-           * We split segments at intersections, self-intersections, nodes with ele tags, and transit stops;
-           * the only processing we do on other nodes is to accumulate their geometry
+           * Traverse through all the nodes of this edge. For nodes which are not shared with any other edge, do not create endpoints -- just
+           * accumulate them for geometry and ele tags. For nodes which are shared, create endpoints and StreetVertex instances. One exception:
+           * if the next vertex also appears earlier in the way, we need to split the way, because otherwise we have a way that loops from a
+           * vertex to itself, which could cause issues with splitting.
            */
-          if (segmentCoordinates.size() == 0) {
-            segmentCoordinates.add(getCoordinate(osmStartNode));
-          }
+          Long startNode = null;
+          // where the current edge should start
+          OSMNode osmStartNode = null;
 
-          if (
-            intersectionNodes.containsKey(endNode) ||
-            i == nodes.size() - 2 ||
-            nodes.subList(0, i).contains(nodes.get(i)) ||
-            osmEndNode.hasTag("ele") ||
-            osmEndNode.isBoardingLocation() ||
-            osmEndNode.isBarrier()
-          ) {
-            segmentCoordinates.add(getCoordinate(osmEndNode));
+          for (int i = 0; i < nodes.size() - 1; i++) {
+            OSMNode segmentStartOSMNode = osmdb.getNode(nodes.get(i));
 
-            geometry =
-              GeometryUtils
-                .getGeometryFactory()
-                .createLineString(segmentCoordinates.toArray(new Coordinate[0]));
-            segmentCoordinates.clear();
-          } else {
-            segmentCoordinates.add(getCoordinate(osmEndNode));
-            continue;
-          }
+            if (segmentStartOSMNode == null) {
+              continue;
+            }
 
-          /* generate endpoints */
-          if (startEndpoint == null) { // first iteration on this way
-            // make or get a shared vertex for flat intersections,
-            // one vertex per level for multilevel nodes like elevators
-            startEndpoint = getVertexForOsmNode(osmStartNode, way);
-            String ele = segmentStartOSMNode.getTag("ele");
+            Long endNode = nodes.get(i + 1);
+
+            if (osmStartNode == null) {
+              startNode = nodes.get(i);
+              osmStartNode = segmentStartOSMNode;
+            }
+            // where the current edge might end
+            OSMNode osmEndNode = osmdb.getNode(endNode);
+
+            LineString geometry;
+
+            /*
+             * We split segments at intersections, self-intersections, nodes with ele tags, and transit stops;
+             * the only processing we do on other nodes is to accumulate their geometry
+             */
+            if (segmentCoordinates.size() == 0) {
+              segmentCoordinates.add(getCoordinate(osmStartNode));
+            }
+
+            if (
+              intersectionNodes.containsKey(endNode) ||
+              i == nodes.size() - 2 ||
+              nodes.subList(0, i).contains(nodes.get(i)) ||
+              osmEndNode.hasTag("ele") ||
+              osmEndNode.isBoardingLocation() ||
+              osmEndNode.isBarrier()
+            ) {
+              segmentCoordinates.add(getCoordinate(osmEndNode));
+
+              geometry =
+                GeometryUtils
+                  .getGeometryFactory()
+                  .createLineString(segmentCoordinates.toArray(new Coordinate[0]));
+              segmentCoordinates.clear();
+            } else {
+              segmentCoordinates.add(getCoordinate(osmEndNode));
+              continue;
+            }
+
+            /* generate endpoints */
+            if (startEndpoint == null) { // first iteration on this way
+              // make or get a shared vertex for flat intersections,
+              // one vertex per level for multilevel nodes like elevators
+              startEndpoint = getVertexForOsmNode(osmStartNode, way);
+              String ele = segmentStartOSMNode.getTag("ele");
+              if (ele != null) {
+                Double elevation = ElevationUtils.parseEleTag(ele);
+                if (elevation != null) {
+                  elevationData.put(startEndpoint, elevation);
+                }
+              }
+            } else { // subsequent iterations
+              startEndpoint = endEndpoint;
+            }
+
+            endEndpoint = getVertexForOsmNode(osmEndNode, way);
+            String ele = osmEndNode.getTag("ele");
             if (ele != null) {
               Double elevation = ElevationUtils.parseEleTag(ele);
               if (elevation != null) {
-                elevationData.put(startEndpoint, elevation);
+                elevationData.put(endEndpoint, elevation);
               }
             }
-          } else { // subsequent iterations
-            startEndpoint = endEndpoint;
+            StreetEdgePair streets = getEdgesForStreet(
+              startEndpoint,
+              endEndpoint,
+              way,
+              i,
+              permissions,
+              geometry
+            );
+
+            StreetEdge street = streets.main;
+            StreetEdge backStreet = streets.back;
+            applyWayProperties(street, backStreet, wayData, way);
+
+            applyEdgesToTurnRestrictions(way, startNode, endNode, street, backStreet);
+            startNode = endNode;
+            osmStartNode = osmdb.getNode(startNode);
           }
 
-          endEndpoint = getVertexForOsmNode(osmEndNode, way);
-          String ele = osmEndNode.getTag("ele");
-          if (ele != null) {
-            Double elevation = ElevationUtils.parseEleTag(ele);
-            if (elevation != null) {
-              elevationData.put(endEndpoint, elevation);
-            }
-          }
-          StreetEdgePair streets = getEdgesForStreet(
-            startEndpoint,
-            endEndpoint,
-            way,
-            i,
-            permissions,
-            geometry
-          );
-
-          StreetEdge street = streets.main;
-          StreetEdge backStreet = streets.back;
-          applyWayProperties(street, backStreet, wayData, way);
-
-          applyEdgesToTurnRestrictions(way, startNode, endNode, street, backStreet);
-          startNode = endNode;
-          osmStartNode = osmdb.getNode(startNode);
-        }
-
-        //Keep lambda! A method-ref would log incorrect class and line number
-        //noinspection Convert2MethodRef
-        progress.step(m -> LOG.info(m));
-      });
+          //Keep lambda! A method-ref would log incorrect class and line number
+          //noinspection Convert2MethodRef
+          progress.step(m -> LOG.info(m));
+        });
 
       LOG.info(progress.completeMessage());
     }

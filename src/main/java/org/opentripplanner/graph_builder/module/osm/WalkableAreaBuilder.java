@@ -559,20 +559,15 @@ public class WalkableAreaBuilder {
 
       backStreet.setLink(OsmFilter.isLink(areaEntity));
 
-      if (!wayPropertiesCache.containsKey(areaEntity)) {
-        WayProperties wayData = areaEntity
-          .getOsmProvider()
-          .getWayPropertySet()
-          .getDataForWay(areaEntity);
-        wayPropertiesCache.put(areaEntity, wayData);
+      WayProperties wayProperties;
+      if (wayPropertiesCache.containsKey(areaEntity)) {
+        wayProperties = wayPropertiesCache.get(areaEntity);
+      } else {
+        wayProperties = areaEntity.getOsmProvider().getWayPropertySet().getDataForWay(areaEntity);
+        wayPropertiesCache.put(areaEntity, wayProperties);
       }
 
-      handler.applyWayProperties(
-        street,
-        backStreet,
-        wayPropertiesCache.get(areaEntity),
-        areaEntity
-      );
+      handler.applyWayProperties(street, backStreet, wayProperties, areaEntity);
       return Set.of(street, backStreet);
     } else {
       // take the part that intersects with the start vertex
@@ -644,22 +639,18 @@ public class WalkableAreaBuilder {
       String id = "way (area) " + areaEntity.getId() + " (splitter linking)";
       I18NString name = handler.getNameForWay(areaEntity, id);
       namedArea.setName(name);
-
-      if (!wayPropertiesCache.containsKey(areaEntity)) {
-        WayProperties wayData = areaEntity
-          .getOsmProvider()
-          .getWayPropertySet()
-          .getDataForWay(areaEntity);
-        wayPropertiesCache.put(areaEntity, wayData);
+      WayProperties wayProperties;
+      if (wayPropertiesCache.containsKey(areaEntity)) {
+        wayProperties = wayPropertiesCache.get(areaEntity);
+      } else {
+        wayProperties = areaEntity.getOsmProvider().getWayPropertySet().getDataForWay(areaEntity);
+        wayPropertiesCache.put(areaEntity, wayProperties);
       }
 
-      Double bicycleSafety = wayPropertiesCache
-        .get(areaEntity)
-        .getBicycleSafetyFeatures()
-        .forward();
+      double bicycleSafety = wayProperties.getBicycleSafetyFeatures().forward();
       namedArea.setBicycleSafetyMultiplier(bicycleSafety);
 
-      Double walkSafety = wayPropertiesCache.get(areaEntity).getWalkSafetyFeatures().forward();
+      double walkSafety = wayProperties.getWalkSafetyFeatures().forward();
       namedArea.setWalkSafetyMultiplier(walkSafety);
 
       namedArea.setOriginalEdges(intersection);

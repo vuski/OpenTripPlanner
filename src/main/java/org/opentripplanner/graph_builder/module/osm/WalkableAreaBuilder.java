@@ -583,8 +583,7 @@ public class WalkableAreaBuilder {
         if (lineParts.getLength() > 0.000001) {
           Coordinate edgeCoordinate = null;
           // this is either a LineString or a MultiLineString (we hope)
-          if (lineParts instanceof MultiLineString) {
-            MultiLineString mls = (MultiLineString) lineParts;
+          if (lineParts instanceof MultiLineString mls) {
             boolean found = false;
             for (int i = 0; i < mls.getNumGeometries(); ++i) {
               LineString segment = (LineString) mls.getGeometryN(i);

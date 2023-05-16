@@ -142,7 +142,8 @@ public class RoutingWorker {
       it -> firstRemovedItinerary = it
     );
 
-    List<Itinerary> filteredItineraries = filterChain.filter(itineraries);
+    //    List<Itinerary> filteredItineraries = filterChain.filter(itineraries);
+    List<Itinerary> filteredItineraries = itineraries;
     routingErrors.addAll(filterChain.getRoutingErrors());
 
     if (LOG.isDebugEnabled()) {

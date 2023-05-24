@@ -10,10 +10,12 @@ import java.util.Collection;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
 import org.opentripplanner.raptor.api.model.RaptorConstants;
+import org.opentripplanner.raptor.api.request.BitSetPassthroughPoints;
 import org.opentripplanner.raptor.api.request.Optimization;
+import org.opentripplanner.raptor.api.request.PassthroughPoints;
 import org.opentripplanner.raptor.api.request.RaptorRequest;
 import org.opentripplanner.raptor.api.request.RaptorRequestBuilder;
-import org.opentripplanner.raptor.api.request.RaptorTransitViaRequest;
+import org.opentripplanner.raptor.api.request.RaptorTransitPassthroughRequest;
 import org.opentripplanner.raptor.rangeraptor.SystemErrDebugLogger;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.performance.PerformanceTimersForRaptor;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.TripSchedule;
@@ -106,16 +108,20 @@ public class RaptorRequestMapper {
     if (preferences.transfer().maxAdditionalTransfers() != null) {
       searchParams.numberOfAdditionalTransfers(preferences.transfer().maxAdditionalTransfers());
     }
+
+    final PassthroughPoints passthroughPoints = BitSetPassthroughPoints.create(
+      request.getPassthroughLocations()
+    );
+
     builder.withMultiCriteria(mcBuilder -> {
       preferences
         .transit()
         .raptor()
         .relaxGeneralizedCostAtDestination()
         .ifPresent(mcBuilder::withRelaxCostAtDestination);
-
-      // TODO: 2023-05-19 via pass through: this is hardcoded right now
-      //  we need to figure out how to map stop ids to stop indexes
-        mcBuilder.withTransitViaRequest(new RaptorTransitViaRequest());
+      mcBuilder.withTransitPassthroughRequest(
+        new RaptorTransitPassthroughRequest(passthroughPoints)
+      );
     });
 
     for (Optimization optimization : preferences.transit().raptor().optimizations()) {
@@ -139,7 +145,6 @@ public class RaptorRequestMapper {
       .addEgressPaths(egressPaths);
 
     var raptorDebugging = request.journey().transit().raptorDebugging();
-
 
     if (raptorDebugging.isEnabled()) {
       var debug = builder.debug();

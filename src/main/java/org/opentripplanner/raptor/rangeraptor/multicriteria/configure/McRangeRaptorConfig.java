@@ -1,6 +1,5 @@
 package org.opentripplanner.raptor.rangeraptor.multicriteria.configure;
 
-import java.util.BitSet;
 import java.util.function.BiFunction;
 import javax.annotation.Nullable;
 import org.opentripplanner.raptor.api.model.DominanceFunction;
@@ -169,13 +168,13 @@ public class McRangeRaptorConfig<T extends RaptorTripSchedule> {
    */
   private boolean includeC2() {
     return (
-      mcRequest().transitViaRequest().isPresent() ||
+      mcRequest().transitPassthroughRequest().isPresent() ||
       mcRequest().transitPriorityCalculator().isPresent()
     );
   }
 
   private PatternRideFactory<T, PatternRideC2<T>> createPatternRideC2Factory() {
-    if (mcRequest().transitViaRequest().isPresent()) {
+    if (mcRequest().transitPassthroughRequest().isPresent()) {
       return new ViaRideFactory<>();
     } else if (mcRequest().transitPriorityCalculator().isPresent()) {
       return new TransitPriorityGroupRideFactory<>(getTransitPriorityGroupCalculator());
@@ -187,8 +186,8 @@ public class McRangeRaptorConfig<T extends RaptorTripSchedule> {
 
   @Nullable
   private DominanceFunction dominanceFunctionC2() {
-    if (mcRequest().transitViaRequest().isPresent()) {
-      return mcRequest().transitViaRequest().get().dominanceFunction();
+    if (mcRequest().transitPassthroughRequest().isPresent()) {
+      return mcRequest().transitPassthroughRequest().get().dominanceFunction();
     } else if (mcRequest().transitPriorityCalculator().isPresent()) {
       return mcRequest()
         .transitPriorityCalculator()

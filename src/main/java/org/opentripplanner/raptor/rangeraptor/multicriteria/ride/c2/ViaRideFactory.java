@@ -8,9 +8,15 @@ public class ViaRideFactory<T extends RaptorTripSchedule>
   implements PatternRideFactory<T, PatternRideC2<T>> {
 
   @Override
-  public PatternRideC2<T> createPatternRide(McStopArrival<T> prevArrival, int boardStopIndex,
-                                            int boardPos, int boardTime, int boardCost1,
-                                            int relativeCost1, T trip) {
+  public PatternRideC2<T> createPatternRide(
+    McStopArrival<T> prevArrival,
+    int boardStopIndex,
+    int boardPos,
+    int boardTime,
+    int boardCost1,
+    int relativeCost1,
+    T trip
+  ) {
     return new PatternRideC2<>(
       prevArrival,
       boardStopIndex,

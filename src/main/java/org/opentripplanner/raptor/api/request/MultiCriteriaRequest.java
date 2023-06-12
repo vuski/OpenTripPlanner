@@ -19,6 +19,7 @@ public class MultiCriteriaRequest<T extends RaptorTripSchedule> {
 
   @Nullable
   private final RaptorTransitPriorityGroupCalculator transitPriorityCalculator;
+
   @Nullable
   private final RaptorTransitViaRequest transitViaRequest;
 

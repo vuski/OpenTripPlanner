@@ -58,7 +58,6 @@ public interface RaptorPath<T extends RaptorTripSchedule> extends Comparable<Rap
 
   int c2();
 
-
   /**
    * The first leg/path of this journey - which is linked to the next and so on. The leg can contain
    * sub-legs, for example: walk-flex-walk.
@@ -184,11 +183,7 @@ public interface RaptorPath<T extends RaptorTripSchedule> extends Comparable<Rap
     return l.c1() < relax.relax(r.c1());
   }
 
-  static <T extends RaptorTripSchedule> boolean compareC2(
-    RaptorPath<T> l,
-    RaptorPath<T> r
-  ) {
-
+  static <T extends RaptorTripSchedule> boolean compareC2(RaptorPath<T> l, RaptorPath<T> r) {
     return l.c2() > r.c2();
   }
 }

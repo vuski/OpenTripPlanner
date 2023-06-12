@@ -30,6 +30,7 @@ import org.opentripplanner.raptor.util.paretoset.ParetoComparator;
  * destination, because Range Raptor works in iterations backwards in time.
  */
 public class PathParetoSetComparators {
+
   /** Prevent this utility class from instantiation. */
   private PathParetoSetComparators() {}
 
@@ -44,7 +45,6 @@ public class PathParetoSetComparators {
     RelaxFunction relaxC1,
     boolean useC2
   ) {
-
     boolean includeRelaxedCost = includeCost && !relaxC1.isNormal();
     boolean preferLatestDeparture = preferLateArrival != searchDirection.isInReverse();
 
@@ -121,10 +121,8 @@ public class PathParetoSetComparators {
 
   public static <
     T extends RaptorTripSchedule
-    > ParetoComparator<RaptorPath<T>> comparatorStandardArrivalTimeAndC2() {
-    return (l, r) -> compareArrivalTime(l, r) ||
-      compareNumberOfTransfers(l, r) ||
-      compareC2(l, r);
+  > ParetoComparator<RaptorPath<T>> comparatorStandardArrivalTimeAndC2() {
+    return (l, r) -> compareArrivalTime(l, r) || compareNumberOfTransfers(l, r) || compareC2(l, r);
   }
 
   public static <
@@ -135,10 +133,9 @@ public class PathParetoSetComparators {
 
   public static <
     T extends RaptorTripSchedule
-    > ParetoComparator<RaptorPath<T>> comparatorStandardDepartureTimeAndC2() {
-    return (l, r) -> compareDepartureTime(l, r) ||
-      compareNumberOfTransfers(l, r) ||
-      compareC2(l, r);
+  > ParetoComparator<RaptorPath<T>> comparatorStandardDepartureTimeAndC2() {
+    return (l, r) ->
+      compareDepartureTime(l, r) || compareNumberOfTransfers(l, r) || compareC2(l, r);
   }
 
   public static <
@@ -152,12 +149,12 @@ public class PathParetoSetComparators {
 
   public static <
     T extends RaptorTripSchedule
-    > ParetoComparator<RaptorPath<T>> comparatorTimetableAndC2() {
+  > ParetoComparator<RaptorPath<T>> comparatorTimetableAndC2() {
     return (l, r) ->
       compareIterationDepartureTime(l, r) ||
-        compareArrivalTime(l, r) ||
-        compareNumberOfTransfers(l, r) ||
-        compareC2(l, r);
+      compareArrivalTime(l, r) ||
+      compareNumberOfTransfers(l, r) ||
+      compareC2(l, r);
   }
 
   public static <
@@ -222,70 +219,77 @@ public class PathParetoSetComparators {
       compareC1(relaxCost, l, r);
   }
 
-    public static <
+  public static <
     T extends RaptorTripSchedule
-    > ParetoComparator<RaptorPath<T>> comparatorTimetableAndC1AndC2() {
-    return (l, r) -> compareIterationDepartureTime(l, r) ||
-        compareArrivalTime(l, r) ||
-        compareNumberOfTransfers(l, r) ||
-        compareDuration(l, r) ||
-        compareC1(l, r) ||
-        compareC2(l, r);
+  > ParetoComparator<RaptorPath<T>> comparatorTimetableAndC1AndC2() {
+    return (l, r) ->
+      compareIterationDepartureTime(l, r) ||
+      compareArrivalTime(l, r) ||
+      compareNumberOfTransfers(l, r) ||
+      compareDuration(l, r) ||
+      compareC1(l, r) ||
+      compareC2(l, r);
   }
 
-    public static <
+  public static <
     T extends RaptorTripSchedule
-    > ParetoComparator<RaptorPath<T>> comparatorTimetableAndRelaxedC1AndC2(
+  > ParetoComparator<RaptorPath<T>> comparatorTimetableAndRelaxedC1AndC2(
     @Nonnull RelaxFunction relaxCost
   ) {
     return (l, r) ->
       compareIterationDepartureTime(l, r) ||
-        compareArrivalTime(l, r) ||
-        compareNumberOfTransfers(l, r) ||
-        compareDuration(l, r) ||
-        compareC1(relaxCost, l, r) ||
-        compareC2(l, r);
+      compareArrivalTime(l, r) ||
+      compareNumberOfTransfers(l, r) ||
+      compareDuration(l, r) ||
+      compareC1(relaxCost, l, r) ||
+      compareC2(l, r);
   }
 
-  public static <T extends RaptorTripSchedule> ParetoComparator<RaptorPath<T>> comparatorWithC1AndC2() {
+  public static <
+    T extends RaptorTripSchedule
+  > ParetoComparator<RaptorPath<T>> comparatorWithC1AndC2() {
     return (l, r) ->
       compareArrivalTime(l, r) ||
-        compareNumberOfTransfers(l, r) ||
-        compareDuration(l, r) ||
-        compareC1(l, r) ||
-        compareC2(l, r);
+      compareNumberOfTransfers(l, r) ||
+      compareDuration(l, r) ||
+      compareC1(l, r) ||
+      compareC2(l, r);
   }
 
   public static <
     T extends RaptorTripSchedule
-    > ParetoComparator<RaptorPath<T>> comparatorDepartureTimeAndC1AndC2() {
+  > ParetoComparator<RaptorPath<T>> comparatorDepartureTimeAndC1AndC2() {
     return (l, r) ->
       compareDepartureTime(l, r) ||
-        compareNumberOfTransfers(l, r) ||
-        compareDuration(l, r) ||
-        compareC1(l, r) ||
-        compareC2(l, r);
+      compareNumberOfTransfers(l, r) ||
+      compareDuration(l, r) ||
+      compareC1(l, r) ||
+      compareC2(l, r);
   }
 
   public static <
     T extends RaptorTripSchedule
-    > ParetoComparator<RaptorPath<T>> comparatorArrivalTimeAndRelaxedC1AndC2(RelaxFunction relaxCost) {
+  > ParetoComparator<RaptorPath<T>> comparatorArrivalTimeAndRelaxedC1AndC2(
+    RelaxFunction relaxCost
+  ) {
     return (l, r) ->
       compareArrivalTime(l, r) ||
-        compareNumberOfTransfers(l, r) ||
-        compareDuration(l, r) ||
-        compareC1(relaxCost, l, r) ||
-        compareC2(l, r);
+      compareNumberOfTransfers(l, r) ||
+      compareDuration(l, r) ||
+      compareC1(relaxCost, l, r) ||
+      compareC2(l, r);
   }
 
   public static <
     T extends RaptorTripSchedule
-    > ParetoComparator<RaptorPath<T>> comparatorDepartureTimeAndRelaxedC1AndC2(RelaxFunction relaxCost) {
+  > ParetoComparator<RaptorPath<T>> comparatorDepartureTimeAndRelaxedC1AndC2(
+    RelaxFunction relaxCost
+  ) {
     return (l, r) ->
       compareDepartureTime(l, r) ||
-        compareNumberOfTransfers(l, r) ||
-        compareDuration(l, r) ||
-        compareC1(relaxCost, l, r) ||
-        compareC2(l, r);
+      compareNumberOfTransfers(l, r) ||
+      compareDuration(l, r) ||
+      compareC1(relaxCost, l, r) ||
+      compareC2(l, r);
   }
 }

@@ -54,19 +54,27 @@ public interface ArrivalParetoSetComparatorFactory<T extends McStopArrival<?>> {
     };
   }
 
-  private static <T extends McStopArrival<?>> ArrivalParetoSetComparatorFactory<T> createFactoryC1AndC2(DominanceFunction c2DominanceFunction) {
+  private static <
+    T extends McStopArrival<?>
+  > ArrivalParetoSetComparatorFactory<T> createFactoryC1AndC2(
+    DominanceFunction c2DominanceFunction
+  ) {
     // TODO: 2023-05-19 via pass through: is this right?
     return new ArrivalParetoSetComparatorFactory<T>() {
       @Override
       public ParetoComparator<T> compareArrivalTimeRoundAndCost() {
-        return (l, r) -> c2DominanceFunction.leftDominateRight(l.c2(), r.c2()) || McStopArrival.compareBase(l, r);
+        return (l, r) ->
+          c2DominanceFunction.leftDominateRight(l.c2(), r.c2()) || McStopArrival.compareBase(l, r);
       }
 
       @Override
       public ParetoComparator<T> compareArrivalTimeRoundCostAndOnBoardArrival() {
-        return ((l, r) -> c2DominanceFunction.leftDominateRight(l.c2(), r.c2()) ||
-          McStopArrival.compareBase(l, r) ||
-          McStopArrival.compareArrivedOnBoard(l, r));
+        return (
+          (l, r) ->
+            c2DominanceFunction.leftDominateRight(l.c2(), r.c2()) ||
+            McStopArrival.compareBase(l, r) ||
+            McStopArrival.compareArrivedOnBoard(l, r)
+        );
       }
     };
   }

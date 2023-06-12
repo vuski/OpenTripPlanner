@@ -91,7 +91,6 @@ class RaptorPathTest {
     int c1
   )
     implements RaptorPath<TestTripSchedule> {
-
     // TODO: 2023-05-11 via pass through: what should we do with c2 here?
 
     @Override

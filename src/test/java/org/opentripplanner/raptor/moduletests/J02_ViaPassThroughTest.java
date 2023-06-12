@@ -26,6 +26,7 @@ import org.opentripplanner.raptor.configure.RaptorConfig;
 import org.opentripplanner.raptor.moduletests.support.RaptorModuleTestCase;
 
 public class J02_ViaPassThroughTest {
+
   private final TestTransitData data = new TestTransitData();
   private final RaptorRequestBuilder<TestTripSchedule> requestBuilder = new RaptorRequestBuilder<>();
   private final RaptorService<TestTripSchedule> raptorService = new RaptorService<>(
@@ -61,7 +62,7 @@ public class J02_ViaPassThroughTest {
 
     // Make sure the slack have values which prevent the normal from happening transfer.
     // The test scenario have zero seconds to transfer, so any slack will do.
-//    data.withSlackProvider(new DefaultSlackProvider(D30s, D20s, D10s));
+    //    data.withSlackProvider(new DefaultSlackProvider(D30s, D20s, D10s));
 
     ModuleTestDebugLogging.setupDebugLogging(data, requestBuilder);
   }
@@ -70,14 +71,12 @@ public class J02_ViaPassThroughTest {
     // TODO: 2023-05-22 via pass through: this test won't work right now since via point is hardcoded
     //  when it's implemented, make sure to include C as a via point in multiCriteriaRequest
 
-    var path = "Walk 30s ~ A ~ BUS R1 0:02 0:20 ~ E ~ Walk 30s [0:01:30 0:20:30 19m 0tx $1800]\n" +
+    var path =
+      "Walk 30s ~ A ~ BUS R1 0:02 0:20 ~ E ~ Walk 30s [0:01:30 0:20:30 19m 0tx $1800]\n" +
       "Walk 30s ~ A ~ BUS R2 0:02 0:50 ~ D ~ Walk 30s [0:01:30 0:50:30 49m 0tx $3600]";
 
     // TODO: 2023-05-22 via pass through: inject via point to multi criteria request
-    return RaptorModuleTestCase
-      .of()
-      .add(TC_MULTI_CRITERIA, path)
-      .build();
+    return RaptorModuleTestCase.of().add(TC_MULTI_CRITERIA, path).build();
   }
 
   @ParameterizedTest

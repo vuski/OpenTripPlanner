@@ -23,6 +23,7 @@ import org.opentripplanner.raptor.api.path.TransitPathLeg;
  * @param <T> The TripSchedule type defined by the user of the raptor API.
  */
 public class Path<T extends RaptorTripSchedule> implements RaptorPath<T> {
+
   private final int iterationDepartureTime;
   private final int startTime;
   private final int endTime;
@@ -67,7 +68,12 @@ public class Path<T extends RaptorTripSchedule> implements RaptorPath<T> {
 
   /** Copy constructor */
   protected Path(RaptorPath<T> original) {
-    this(original.rangeRaptorIterationDepartureTime(), original.accessLeg(), original.c1(), original.c2());
+    this(
+      original.rangeRaptorIterationDepartureTime(),
+      original.accessLeg(),
+      original.c1(),
+      original.c2()
+    );
   }
 
   /**

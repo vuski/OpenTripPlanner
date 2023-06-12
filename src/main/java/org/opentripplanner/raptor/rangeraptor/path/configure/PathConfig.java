@@ -41,7 +41,10 @@ public class PathConfig<T extends RaptorTripSchedule> {
    * @param includeC2Cost whether to include c2 cost in the pareto set criteria.
    *                      It will be generated for each leg and a total for the path.
    */
-  public DestinationArrivalPaths<T> createDestArrivalPaths(boolean includeGeneralizedCost, boolean includeC2Cost) {
+  public DestinationArrivalPaths<T> createDestArrivalPaths(
+    boolean includeGeneralizedCost,
+    boolean includeC2Cost
+  ) {
     return new DestinationArrivalPaths<>(
       createPathParetoComparator(includeGeneralizedCost, includeC2Cost),
       ctx.calculator(),
@@ -56,7 +59,10 @@ public class PathConfig<T extends RaptorTripSchedule> {
 
   /* private members */
 
-  private ParetoComparator<RaptorPath<T>> createPathParetoComparator(boolean includeCost, boolean includeC2) {
+  private ParetoComparator<RaptorPath<T>> createPathParetoComparator(
+    boolean includeCost,
+    boolean includeC2
+  ) {
     return paretoComparator(
       includeCost,
       ctx.searchParams().timetable(),

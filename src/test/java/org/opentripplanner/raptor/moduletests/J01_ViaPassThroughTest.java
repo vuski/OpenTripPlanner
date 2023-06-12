@@ -72,14 +72,12 @@ public class J01_ViaPassThroughTest {
     // TODO: 2023-05-22 via pass through: this test won't work right now since via point is hardcoded
     //  when it's implemented, make sure to include C as a via point in multiCriteriaRequest
 
-    var path = "Walk 30s ~ A ~ BUS R1 0:02 0:20 ~ E ~ Walk 30s [0:01:30 0:20:30 19m 0tx $1800]\n" +
+    var path =
+      "Walk 30s ~ A ~ BUS R1 0:02 0:20 ~ E ~ Walk 30s [0:01:30 0:20:30 19m 0tx $1800]\n" +
       "Walk 30s ~ A ~ BUS R2 0:02 0:50 ~ D ~ Walk 30s [0:01:30 0:50:30 49m 0tx $3600]";
 
     // TODO: 2023-05-22 via pass through: inject via point to multi criteria request
-    return RaptorModuleTestCase
-      .of()
-      .add(TC_MULTI_CRITERIA, path)
-      .build();
+    return RaptorModuleTestCase.of().add(TC_MULTI_CRITERIA, path).build();
   }
 
   @ParameterizedTest
@@ -87,5 +85,4 @@ public class J01_ViaPassThroughTest {
   void testRaptor(RaptorModuleTestCase testCase) {
     assertEquals(testCase.expected(), testCase.run(raptorService, data, requestBuilder));
   }
-
 }

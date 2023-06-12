@@ -70,12 +70,11 @@ public final class MultiCriteriaRoutingStrategy<
 
   @Override
   public void alightOnlyRegularTransferExist(int stopIndex, int stopPos, int alightSlack) {
-
     // TODO: 2023-05-11 pass through via: add extra c2 to the ride
 
     for (R ride : patternRides) {
       if (ride.c2() == 0 && indexes.contains(stopIndex)) {
-        ride = patternRideFactory.createPatternRide(ride,1);
+        ride = patternRideFactory.createPatternRide(ride, 1);
       }
 
       state.transitToStop(ride, stopIndex, ride.trip().arrival(stopPos), alightSlack);

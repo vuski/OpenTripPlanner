@@ -71,9 +71,15 @@ public record PatternRideC1<T extends RaptorTripSchedule>(
   public static <T extends RaptorTripSchedule> PatternRideFactory<T, PatternRideC1<T>> factory() {
     return new PatternRideFactory<T, PatternRideC1<T>>() {
       @Override
-      public PatternRideC1<T> createPatternRide(McStopArrival<T> prevArrival, int boardStopIndex,
-                                                int boardPos, int boardTime, int boardCost1,
-                                                int relativeCost1, T trip) {
+      public PatternRideC1<T> createPatternRide(
+        McStopArrival<T> prevArrival,
+        int boardStopIndex,
+        int boardPos,
+        int boardTime,
+        int boardCost1,
+        int relativeCost1,
+        T trip
+      ) {
         return new PatternRideC1<>(
           prevArrival,
           boardStopIndex,

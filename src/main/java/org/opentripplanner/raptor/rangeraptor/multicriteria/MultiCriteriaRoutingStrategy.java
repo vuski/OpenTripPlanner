@@ -2,16 +2,14 @@ package org.opentripplanner.raptor.rangeraptor.multicriteria;
 
 import static org.opentripplanner.raptor.api.model.PathLegType.ACCESS;
 
-import java.util.Arrays;
-import java.util.HashSet;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
 import org.opentripplanner.raptor.api.model.RaptorTripSchedule;
+import org.opentripplanner.raptor.api.request.PassthroughPoints;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RoutingStrategy;
 import org.opentripplanner.raptor.rangeraptor.internalapi.SlackProvider;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.McStopArrival;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.ride.PatternRide;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.ride.PatternRideFactory;
-import org.opentripplanner.raptor.rangeraptor.multicriteria.ride.c2.PatternRideC2;
 import org.opentripplanner.raptor.rangeraptor.support.TimeBasedBoardingSupport;
 import org.opentripplanner.raptor.spi.RaptorBoardOrAlightEvent;
 import org.opentripplanner.raptor.spi.RaptorConstrainedBoardingSearch;
@@ -36,6 +34,7 @@ public final class MultiCriteriaRoutingStrategy<
   private final ParetoSet<R> patternRides;
   private final RaptorCostCalculator<T> generalizedCostCalculator;
   private final SlackProvider slackProvider;
+  private final PassthroughPoints passthroughPoints;
 
   public MultiCriteriaRoutingStrategy(
     McRangeRaptorWorkerState<T> state,
@@ -43,7 +42,8 @@ public final class MultiCriteriaRoutingStrategy<
     PatternRideFactory<T, R> patternRideFactory,
     RaptorCostCalculator<T> generalizedCostCalculator,
     SlackProvider slackProvider,
-    ParetoSet<R> patternRides
+    ParetoSet<R> patternRides,
+    PassthroughPoints passthroughPoints
   ) {
     this.state = state;
     this.boardingSupport = boardingSupport;
@@ -51,6 +51,7 @@ public final class MultiCriteriaRoutingStrategy<
     this.generalizedCostCalculator = generalizedCostCalculator;
     this.slackProvider = slackProvider;
     this.patternRides = patternRides;
+    this.passthroughPoints = passthroughPoints;
   }
 
   @Override
@@ -65,15 +66,13 @@ public final class MultiCriteriaRoutingStrategy<
     this.patternRides.clear();
   }
 
-  // Helsingborg C
-  public static HashSet<Integer> indexes = new HashSet<>();
-
   @Override
   public void alightOnlyRegularTransferExist(int stopIndex, int stopPos, int alightSlack) {
     // TODO: 2023-05-11 pass through via: add extra c2 to the ride
 
     for (R ride : patternRides) {
-      if (ride.c2() == 0 && indexes.contains(stopIndex)) {
+      // TODO passthroughIndex should not be hardcoded to '0' but rather set the current passthrough point we're looking for.
+      if (ride.c2() == 0 && passthroughPoints.isPassthroughPoint(0, stopIndex)) {
         ride = patternRideFactory.createPatternRide(ride, 1);
       }
 

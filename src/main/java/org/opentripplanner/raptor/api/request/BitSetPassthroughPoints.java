@@ -19,6 +19,7 @@ public class BitSetPassthroughPoints implements PassthroughPoints {
     if (passthroughStops.isEmpty()) {
       return PassthroughPoints.NO_PASSTHROUGH_POINTS;
     }
+
     return passthroughStops
       .stream()
       .map(vs -> {
@@ -32,5 +33,10 @@ public class BitSetPassthroughPoints implements PassthroughPoints {
   @Override
   public boolean isPassthroughPoint(final int passthroughIndex, final int stop) {
     return passthroughPoints.get(passthroughIndex).get(stop);
+  }
+
+  @Override
+  public int size() {
+    return passthroughPoints.size();
   }
 }

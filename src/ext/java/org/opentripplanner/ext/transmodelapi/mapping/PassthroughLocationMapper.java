@@ -36,8 +36,14 @@ class PassthroughLocationMapper {
   ) {
     return stops
       .stream()
-      .map(sp -> TransitIdMapper.mapIDToDomain(sp))
-      .map(id -> transitService.getStopLocation(id))
-      .collect(collectingAndThen(toList(), sls -> new StopLocations(sls)));
+      .map(TransitIdMapper::mapIDToDomain)
+      .flatMap(id -> {
+        var stopLocations = transitService.getStopOrChildStops(id);
+        if (stopLocations.isEmpty()) {
+          throw new RuntimeException("No match for " + id);
+        }
+        return stopLocations.stream();
+      })
+      .collect(collectingAndThen(toList(), StopLocations::new));
   }
 }

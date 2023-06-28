@@ -5,7 +5,17 @@ package org.opentripplanner.raptor.api.request;
  */
 public interface PassthroughPoints {
   /** Implementation that answers negative for all stops. */
-  PassthroughPoints NO_PASSTHROUGH_POINTS = (vi, s) -> false;
+  PassthroughPoints NO_PASSTHROUGH_POINTS = new PassthroughPoints() {
+    @Override
+    public boolean isPassthroughPoint(int passthroughIndex, int stop) {
+      return false;
+    }
+
+    @Override
+    public int size() {
+      return 0;
+    }
+  };
 
   /**
    * If a certain stop is a passthrough point of a certain position in the trip.
@@ -16,4 +26,9 @@ public interface PassthroughPoints {
    * @throws IndexOutOfBoundsException if the throughIndex position is outside the range
    */
   boolean isPassthroughPoint(int passthroughIndex, int stop);
+
+  /**
+   * Get the number of pass-through points indexes in the collection
+   */
+  int size();
 }

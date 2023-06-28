@@ -16,6 +16,8 @@ import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.raptor.RaptorService;
 import org.opentripplanner.raptor.api.path.RaptorPath;
+import org.opentripplanner.raptor.api.request.PassthroughPoints;
+import org.opentripplanner.raptor.api.request.RaptorTransitPassthroughRequest;
 import org.opentripplanner.raptor.api.response.RaptorResponse;
 import org.opentripplanner.routing.algorithm.mapping.RaptorPathToItineraryMapper;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.street.AccessEgressPenaltyDecorator;
@@ -150,7 +152,12 @@ public class TransitRouter {
             serverContext.transitService().getTransferService(),
             requestTransitDataProvider,
             transitLayer.getStopBoardAlightCosts(),
-            request.preferences().transfer().optimization()
+            request.preferences().transfer().optimization(),
+            raptorRequest
+              .multiCriteria()
+              .transitPassthroughRequest()
+              .map(RaptorTransitPassthroughRequest::passthroughPoints)
+              .orElse(PassthroughPoints.NO_PASSTHROUGH_POINTS)
           )
           .optimize(transitResponse.paths());
     }

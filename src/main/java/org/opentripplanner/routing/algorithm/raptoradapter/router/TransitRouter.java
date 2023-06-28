@@ -150,7 +150,12 @@ public class TransitRouter {
             serverContext.transitService().getTransferService(),
             requestTransitDataProvider,
             transitLayer.getStopBoardAlightCosts(),
-            request.preferences().transfer().optimization()
+            request.preferences().transfer().optimization(),
+            raptorRequest
+              .multiCriteria()
+              .passThroughPoints()
+              // TODO Provide a NOOP PassThroughPoints instance or equivalent.
+              .orElse(null)
           )
           .optimize(transitResponse.paths());
     }

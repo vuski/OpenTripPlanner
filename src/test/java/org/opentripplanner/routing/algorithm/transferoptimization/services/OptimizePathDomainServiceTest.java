@@ -14,6 +14,7 @@ import org.opentripplanner.raptor._data.RaptorTestConstants;
 import org.opentripplanner.raptor._data.api.PathUtils;
 import org.opentripplanner.raptor._data.api.TestPathBuilder;
 import org.opentripplanner.raptor._data.transit.TestTripSchedule;
+import org.opentripplanner.raptor.api.request.PassthroughPoints;
 import org.opentripplanner.raptor.spi.DefaultSlackProvider;
 import org.opentripplanner.raptor.spi.RaptorCostCalculator;
 import org.opentripplanner.raptor.spi.RaptorSlackProvider;
@@ -295,7 +296,8 @@ public class OptimizePathDomainServiceTest implements RaptorTestConstants {
       null,
       0.0,
       TransferOptimizedFilterFactory.filter(true, waitTimeCalculator != null),
-      (new RaptorTestConstants() {})::stopIndexToName
+      (new RaptorTestConstants() {})::stopIndexToName,
+      PassthroughPoints.NO_PASSTHROUGH_POINTS
     );
   }
 

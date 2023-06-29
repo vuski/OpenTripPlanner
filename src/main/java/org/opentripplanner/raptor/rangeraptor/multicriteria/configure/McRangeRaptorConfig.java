@@ -16,6 +16,7 @@ import org.opentripplanner.raptor.rangeraptor.internalapi.RoutingStrategy;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.McRangeRaptorWorkerState;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.McStopArrivals;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.MultiCriteriaRoutingStrategy;
+import org.opentripplanner.raptor.rangeraptor.multicriteria.PassThroughMultiCriteriaRoutingStrategy;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.ArrivalParetoSetComparatorFactory;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.McStopArrival;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.McStopArrivalFactory;
@@ -82,22 +83,26 @@ public class McRangeRaptorConfig<T extends RaptorTripSchedule> {
     PatternRideFactory<T, R> factory,
     ParetoComparator<R> patternRideComparator
   ) {
-    // TODO Verify that this works.
-    final PassthroughPoints passthroughPoints = context
-      .multiCriteria()
-      .transitPassthroughRequest()
-      .map(RaptorTransitPassthroughRequest::passthroughPoints)
-      .orElse(PassthroughPoints.NO_PASSTHROUGH_POINTS);
-
-    return new MultiCriteriaRoutingStrategy<>(
-      state,
-      context.createTimeBasedBoardingSupport(),
-      factory,
-      context.costCalculator(),
-      context.slackProvider(),
-      createPatternRideParetoSet(patternRideComparator),
-      passthroughPoints
-    );
+    if (context.multiCriteria().transitPassthroughRequest().isPresent()) {
+      return new PassThroughMultiCriteriaRoutingStrategy<>(
+        state,
+        context.createTimeBasedBoardingSupport(),
+        factory,
+        context.costCalculator(),
+        context.slackProvider(),
+        createPatternRideParetoSet(patternRideComparator),
+        context.multiCriteria().transitPassthroughRequest().get().passthroughPoints()
+      );
+    } else {
+      return new MultiCriteriaRoutingStrategy<>(
+        state,
+        context.createTimeBasedBoardingSupport(),
+        factory,
+        context.costCalculator(),
+        context.slackProvider(),
+        createPatternRideParetoSet(patternRideComparator)
+      );
+    }
   }
 
   private McRangeRaptorWorkerState<T> createState(Heuristics heuristics) {

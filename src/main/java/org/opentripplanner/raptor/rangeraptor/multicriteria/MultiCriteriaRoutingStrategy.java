@@ -23,18 +23,17 @@ import org.opentripplanner.raptor.util.paretoset.ParetoSet;
  *
  * @param <T> The TripSchedule type defined by the user of the raptor API.
  */
-public final class MultiCriteriaRoutingStrategy<
+public class MultiCriteriaRoutingStrategy<
   T extends RaptorTripSchedule, R extends PatternRide<T>
 >
   implements RoutingStrategy<T> {
 
-  private final McRangeRaptorWorkerState<T> state;
-  private final TimeBasedBoardingSupport<T> boardingSupport;
-  private final PatternRideFactory<T, R> patternRideFactory;
-  private final ParetoSet<R> patternRides;
-  private final RaptorCostCalculator<T> generalizedCostCalculator;
-  private final SlackProvider slackProvider;
-  private final PassthroughPoints passthroughPoints;
+  protected final McRangeRaptorWorkerState<T> state;
+  protected final TimeBasedBoardingSupport<T> boardingSupport;
+  protected final PatternRideFactory<T, R> patternRideFactory;
+  protected final ParetoSet<R> patternRides;
+  protected final RaptorCostCalculator<T> generalizedCostCalculator;
+  protected final SlackProvider slackProvider;
 
   public MultiCriteriaRoutingStrategy(
     McRangeRaptorWorkerState<T> state,
@@ -42,8 +41,7 @@ public final class MultiCriteriaRoutingStrategy<
     PatternRideFactory<T, R> patternRideFactory,
     RaptorCostCalculator<T> generalizedCostCalculator,
     SlackProvider slackProvider,
-    ParetoSet<R> patternRides,
-    PassthroughPoints passthroughPoints
+    ParetoSet<R> patternRides
   ) {
     this.state = state;
     this.boardingSupport = boardingSupport;
@@ -51,7 +49,6 @@ public final class MultiCriteriaRoutingStrategy<
     this.generalizedCostCalculator = generalizedCostCalculator;
     this.slackProvider = slackProvider;
     this.patternRides = patternRides;
-    this.passthroughPoints = passthroughPoints;
   }
 
   @Override
@@ -68,18 +65,8 @@ public final class MultiCriteriaRoutingStrategy<
 
   @Override
   public void alightOnlyRegularTransferExist(int stopIndex, int stopPos, int alightSlack) {
-    if (passthroughPoints.size() != 0) {
-      for (R ride : patternRides) {
-        int c2 = ride.c2();
-        if (c2 < passthroughPoints.size() && passthroughPoints.isPassthroughPoint(c2, stopIndex)) {
-          ride = patternRideFactory.createPatternRide(ride, c2 + 1);
-        }
-        state.transitToStop(ride, stopIndex, ride.trip().arrival(stopPos), alightSlack);
-      }
-    } else {
-      for (R ride : patternRides) {
-        state.transitToStop(ride, stopIndex, ride.trip().arrival(stopPos), alightSlack);
-      }
+    for (R ride : patternRides) {
+      state.transitToStop(ride, stopIndex, ride.trip().arrival(stopPos), alightSlack);
     }
   }
 

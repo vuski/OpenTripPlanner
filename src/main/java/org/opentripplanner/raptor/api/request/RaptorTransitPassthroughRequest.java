@@ -20,6 +20,7 @@ public class RaptorTransitPassthroughRequest implements C2Request {
    * It is critical that the implementation is "static" so it can be inlined, since it
    * is run in the innermost loop of Raptor.
    */
+  @Override
   public DominanceFunction dominanceFunction() {
     return (left, right) -> left > right;
   }

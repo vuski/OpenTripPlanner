@@ -1,5 +1,6 @@
 package org.opentripplanner.raptor.path;
 
+import java.util.Arrays;
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
 import org.opentripplanner.framework.time.TimeUtils;
@@ -43,6 +44,7 @@ public class PathBuilderLeg<T extends RaptorTripSchedule> {
 
   private PathBuilderLeg<T> prev = null;
   private PathBuilderLeg<T> next = null;
+
   private final int[] c2PerStopPosition;
 
   /**
@@ -72,6 +74,7 @@ public class PathBuilderLeg<T extends RaptorTripSchedule> {
       this.fromTime = transit.fromTime();
       this.toTime = transit.toTime();
       c2PerStopPosition = new int[transit.trip.pattern().numberOfStopsInPattern()];
+      Arrays.fill(c2PerStopPosition, NOT_SET);
     } else {
       c2PerStopPosition = new int[0];
     }
@@ -109,8 +112,24 @@ public class PathBuilderLeg<T extends RaptorTripSchedule> {
     return toTime - fromTime;
   }
 
-  public int[] c2PerStopPosition() {
-    return c2PerStopPosition;
+  /**
+   * Get c2 value associate with given stop position in a pattern.
+   *  This works only for transit legs and if c2 is already set
+   */
+  public int c2ForStopPosition(int pos) {
+    var c2 = c2PerStopPosition[pos];
+    if (c2 == NOT_SET) {
+      throw new IllegalArgumentException("C2 for stop position " + pos + " not set");
+    }
+
+    return c2;
+  }
+
+  /**
+   * Set c2 value on a given stop position in a transit leg
+   */
+  public void setC2OnStopPosition(int pos, int c2) {
+    c2PerStopPosition[pos] = c2;
   }
 
   @Nullable

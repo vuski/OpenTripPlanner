@@ -118,29 +118,61 @@ public class OptimizePathDomainService<T extends RaptorTripSchedule> {
   }
 
   public Set<OptimizedPath<T>> findBestTransitPath(RaptorPath<T> originalPath) {
+    if (passthroughPoints.size() != 0) {
+      findBestTransitPathWithPassThroughPoints(originalPath, passthroughPoints);
+    }
     var possibleTransfers = findPossibleTransfers(originalPath);
 
     List<TransitPathLeg<T>> transitLegs = originalPath.transitLegs().collect(Collectors.toList());
 
-    var filter = passthroughPoints.size() != 0
-      ? createC2FilterChain(minCostFilterChain, possibleTransfers, passthroughPoints)
-      : minCostFilterChain;
-
     // Combine transit legs and transfers
-    var tails = findBestTransferOption(originalPath, transitLegs, possibleTransfers, filter);
+    return findBestTransferOption(originalPath, transitLegs, possibleTransfers, minCostFilterChain)
+      .stream()
+      .map(OptimizedPathTail::build)
+      .collect(Collectors.toSet());
+  }
 
-    var stream = tails.stream();
+  /**
+   * Create a filer chain function and find the best transfers combination for journey that also
+   * includes all pass-through points
+   * Algorithm starts with the last trip in the journey, then goes backwards looping through all
+   * possible transfers for each transit leg.
+   * For each possible transfer stop position C2 value is calculated. Filter chain function is going
+   *  to use c2 value and cost function to determine whether tail should be included or excluded from
+   *  the collection.
+   *
+   *  Example:
+   *    Let's say we have a trip with 2 transit legs and the pass-through point is (B)
+   *    There are 3 possible transfer combination with first and second transit
+   *
+   *    Iteration 1 (initial c2 value is 1 since we have one pass-through point):
+   *      (?) Transit 2 -> (Egress) | C2 = 1
+   *
+   *    Iteration 2 (create all possible journey combinations with transfers and calculate c2):
+   *      (?) Transit 1 -> (A) Transit 2 -> (Egress) | C2 = 0 <- C2 is 0 since we will pass through (B) if we board here
+   *      (?) Transit 1 -> (B) Transit 2 -> (Egress) | C2 = 0
+   *      (?) Transit 1 -> (C) Transit 2 -> (Egress) | C2 = 1 <- C2 is 1 since we will not pass through (B) if we board here
+   *
+   *    Iteration 3 (insert access and filter out all combinations where c2 != 0)
+   *      (Access) -> Transit 1 -> (B) Transit 2 -> (Egress) | C2 = 0
+   *      (Access) -> Transit 1 -> (C) Transit 2 -> (Egress) | C2 = 0
+   *
+   *  Then we're going to use minCostFilterChain to determine which of those 2 possibilities is better
+   */
+  private Set<OptimizedPath<T>> findBestTransitPathWithPassThroughPoints(
+    RaptorPath<T> originalPath,
+    PassthroughPoints passthroughPoints
+  ) {
+    var possibleTransfers = findPossibleTransfers(originalPath);
+    List<TransitPathLeg<T>> transitLegs = originalPath.transitLegs().collect(Collectors.toList());
+    var filter = createC2FilterChain(minCostFilterChain, possibleTransfers, passthroughPoints);
 
     // We need to filter out all path without passThrough points
-    if (passthroughPoints.size() != 0) {
-      stream =
-        stream.filter(tail -> {
-          var c2 = calculateC2(tail, possibleTransfers, passthroughPoints);
-          return c2 == 0;
-        });
-    }
-
-    return stream.map(OptimizedPathTail::build).collect(Collectors.toSet());
+    return findBestTransferOption(originalPath, transitLegs, possibleTransfers, filter)
+      .stream()
+      .filter(tail -> calculateC2(tail, possibleTransfers, passthroughPoints) == 0)
+      .map(OptimizedPathTail::build)
+      .collect(Collectors.toSet());
   }
 
   private static <T> T last(List<T> list) {
@@ -232,7 +264,16 @@ public class OptimizePathDomainService<T extends RaptorTripSchedule> {
     );
   }
 
-  public int calculateC2(
+  /**
+   * Loop through all possible boarding positions in OptimizedPathTail and calculate potential c2
+   *  value given position.
+   *
+   * @param tail Current OptimizedPathTail
+   * @param possibleTransfers List all possible transfers for the whole journey
+   * @param passthroughPoints Pass-through points for the search
+   * @return c2 value for the earliest possible boarding position.
+   */
+  private int calculateC2(
     OptimizedPathTail<T> tail,
     List<List<TripToTripTransfer<T>>> possibleTransfers,
     PassthroughPoints passthroughPoints
@@ -243,23 +284,24 @@ public class OptimizePathDomainService<T extends RaptorTripSchedule> {
 
     int c2;
     if (transits.size() == 1) {
-      // That's the first journey we are checking. There can't be any via stops yet.
+      // That's the last transit in the journey we are checking. There can't be any via stops yet.
       // This should be via.size
       c2 = passthroughPoints.size();
     } else {
       // Check c2 value on board position from previous transit leg.
       var previousTransit = transits.get(1);
-      c2 = previousTransit.c2PerStopPosition()[previousTransit.fromStopPos()];
+      c2 = previousTransit.c2ForStopPosition(previousTransit.fromStopPos());
     }
 
     var transitLeg = transits.get(0);
-    // This should be the earliest possible board stop position for a leg
-    //  We can verify that with transfers.
-    // Or if previous leg is access then we know what position it is
     int fromStopPosition;
     if (possibleTransfers.size() + 1 == transits.size()) {
+      // Here we reached the first transit in the journey.
+      //  We do not have to check possible transfers.
       fromStopPosition = transitLeg.fromStopPos();
     } else {
+      // This should be the earliest possible board stop position for a leg.
+      //  We can verify that with transfers.
       fromStopPosition =
         possibleTransfers
           .get(possibleTransfers.size() - transits.size())
@@ -269,22 +311,25 @@ public class OptimizePathDomainService<T extends RaptorTripSchedule> {
           .get();
     }
 
-    for (int pos = transitLeg.toStopPos(); pos >= fromStopPosition; pos--) {
-      // We already visited all via stops
-      if (c2 == 0) {
-        transitLeg.c2PerStopPosition()[pos] = c2;
-        continue;
+    // We already visited all via stops.
+    //  Don't have to check anything. Just set on all stop positions.
+    if (c2 == 0) {
+      for (int pos = transitLeg.toStopPos(); pos >= fromStopPosition; pos--) {
+        transitLeg.setC2OnStopPosition(pos, 0);
       }
+    } else {
+      // Loop through all possible boarding position and calculate potential c2 value
+      for (int pos = transitLeg.toStopPos(); pos >= fromStopPosition; pos--) {
+        var stopIndex = transitLeg.trip().pattern().stopIndex(pos);
+        if (passthroughPoints.isPassthroughPoint(c2 - 1, stopIndex)) {
+          c2--;
+        }
 
-      var pattern = transitLeg.trip().pattern();
-      if (passthroughPoints.isPassthroughPoint(c2 - 1, pattern.stopIndex(pos))) {
-        c2--;
+        transitLeg.setC2OnStopPosition(pos, c2);
       }
-
-      transitLeg.c2PerStopPosition()[pos] = c2;
     }
 
-    return transitLeg.c2PerStopPosition()[fromStopPosition];
+    return transitLeg.c2ForStopPosition(fromStopPosition);
   }
 
   /**

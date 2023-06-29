@@ -11,7 +11,10 @@ import org.opentripplanner.raptor.util.paretoset.ParetoSet;
 
 // TODO: 2023-06-29 via pass through: MultiCriteriaRoutingStrategy was a final class before
 //  can we do inheritance this way or is it against the design?
-public class PassThroughMultiCriteriaRoutingStrategy<T extends RaptorTripSchedule, R extends PatternRide<T>> extends MultiCriteriaRoutingStrategy<T, R> {
+public class PassThroughMultiCriteriaRoutingStrategy<
+  T extends RaptorTripSchedule, R extends PatternRide<T>
+>
+  extends MultiCriteriaRoutingStrategy<T, R> {
 
   private final PassthroughPoints passthroughPoints;
 
@@ -24,7 +27,14 @@ public class PassThroughMultiCriteriaRoutingStrategy<T extends RaptorTripSchedul
     ParetoSet<R> patternRides,
     PassthroughPoints passthroughPoints
   ) {
-    super(state, boardingSupport, patternRideFactory, generalizedCostCalculator, slackProvider, patternRides);
+    super(
+      state,
+      boardingSupport,
+      patternRideFactory,
+      generalizedCostCalculator,
+      slackProvider,
+      patternRides
+    );
     this.passthroughPoints = passthroughPoints;
   }
 

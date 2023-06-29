@@ -23,9 +23,7 @@ import org.opentripplanner.raptor.util.paretoset.ParetoSet;
  *
  * @param <T> The TripSchedule type defined by the user of the raptor API.
  */
-public class MultiCriteriaRoutingStrategy<
-  T extends RaptorTripSchedule, R extends PatternRide<T>
->
+public class MultiCriteriaRoutingStrategy<T extends RaptorTripSchedule, R extends PatternRide<T>>
   implements RoutingStrategy<T> {
 
   protected final McRangeRaptorWorkerState<T> state;
